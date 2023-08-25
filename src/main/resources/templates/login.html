@@ -19,9 +19,9 @@
                 <div class="alert alert-danger" th:if="${param.error}">
                     <span>Invalid username or password</span>
                 </div>
-                <div class="alert alert-dark">
+                <!-- <div class="alert alert-dark">
                     You have been logged out
-                </div>
+                </div> -->
                 <div class="form-group">
                     <label for="inputUsername">Username</label>
                     <input type="input" class="form-control" name="username" th:field="*{username}" id="inputUsername" placeholder="Enter Username" maxlength="20" required>

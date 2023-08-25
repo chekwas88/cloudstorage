@@ -61,7 +61,7 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="nav-notes" role="tabpanel" aria-labelledby="nav-notes-tab">
-                        <button style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showNoteModal()">
+                        <button style="margin: 0.25em;" id="note-creation-button" type="button" class="btn btn-info float-right" onclick="showNoteModal()">
                             + Add a New Note
                         </button>
 
@@ -83,9 +83,10 @@
                                                 th:data-noteDescription="${note.noteDescription}"
                                                 th:data-noteUserId="${note.userId}" type="button"
                                                 onclick="showNoteModal(this.getAttribute('data-noteId'), this.getAttribute('data-noteUserId'), this.getAttribute('data-noteTitle'), this.getAttribute('data-noteDescription'))"
+                                                id="note-edit-button"
                                                 class="btn btn-success">Edit
                                             </button>
-                                            <a th:href="@{/deleteNote(id=${note.noteId})}" class="btn btn-danger">Delete</a>
+                                            <a id="delete-note" th:href="@{/deleteNote(id=${note.noteId})}" class="btn btn-danger">Delete</a>
                                         </td>
                                         <th th:text="${note.noteTitle}" scope="row">Example Note Title</th>
                                         <td th:text="${note.noteDescription}">Example Note Description </td>
@@ -120,14 +121,14 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary" onclick="$('#noteSubmit').click();">Save changes</button>
+                                        <button type="button" id="note-submit" class="btn btn-primary" onclick="$('#noteSubmit').click();">Save changes</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="nav-credentials" role="tabpanel" aria-labelledby="nav-credentials-tab">
-                        <button style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showCredentialModal()">
+                        <button id="credential-creation-button" style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showCredentialModal()">
                             + Add a New Credential
                         </button>
 
@@ -148,13 +149,15 @@
                                         th:data-credentialId="${credential.credentialId}" 
                                         th:data-credentialUrl="${credential.url}"
                                         th:data-credentialUsername="${credential.username}"
-                                        th:data-credentialPassword="${credential.password}"
+                                        th:data-credentialPassword="${encryptionService.decryptValue(credential.password,credential.key)}"
                                         th:data-credentialUserId="${credential.userId}"
+                                        th:data-credentialKey="${credential.key}"
                                         type="button"
-                                        onclick="showCredentialModal(this.getAttribute('data-credentialId'), this.getAttribute('data-credentialUserId'), this.getAttribute('data-credentialUrl'), this.getAttribute('data-credentialUsername'), this.getAttribute('data-credentialPassword'))"
+                                        onclick="showCredentialModal(this.getAttribute('data-credentialId'), this.getAttribute('data-credentialUserId'), this.getAttribute('data-credentialUrl'), this.getAttribute('data-credentialUsername'), this.getAttribute('data-credentialPassword'), this.getAttribute('data-credentialKey'))"
+                                        id="credential-edit-button"
                                         class="btn btn-success">Edit
                                     </button>
-                                        <a th:href="@{/deleteCredential(id=${credential.credentialId})}" class="btn btn-danger">Delete</a>
+                                        <a id="delete-credential" th:href="@{/deleteCredential(id=${credential.credentialId})}" class="btn btn-danger">Delete</a>
                                     </td>
                                     <th th:text="${credential.url}" scope="row">Example Credential URL</th>
                                     <td th:text="${credential.username}">Example Credential Username</td>
@@ -177,6 +180,7 @@
                                         <form th:action="@{/saveCredential}" method="POST" th:object="${credential}">
                                             <input type="hidden" name="credentialId" id="credential-id" th:field="*{credentialId}">
                                             <input type="hidden" name="userId" id="credential-userId" th:field="*{userId}">
+                                            <input type="hidden" name="key" id="credential-key" th:field="*{key}">
                                             <div class="form-group">
                                                 <label for="credential-url" class="col-form-label">URL</label>
                                                 <input type="text" name= "url" class="form-control" id="credential-url"   th:field="*{url}" maxlength="100" required>
@@ -194,7 +198,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary" onclick="$('#credentialSubmit').click();">Save changes</button>
+                                        <button id="credential-submit" type="button" class="btn btn-primary" onclick="$('#credentialSubmit').click();">Save changes</button>
                                     </div>
                                 </div>
                             </div>
@@ -204,10 +208,10 @@
             </div>
         </div>
 
+      
         <script th:src="@{/js/jquery-slim.min.js}"></script>
         <script th:src="@{/js/popper.min.js}"></script>
         <script th:src="@{/js/bootstrap.min.js}"></script>
-
         <!--For opening the note modal-->
         <script type="text/javascript">
             // For opening the note modal
@@ -220,16 +224,18 @@
             }
 
             // For opening the credentials modal
-            function showCredentialModal(credentialId,userId, url, username, password) {
+            function showCredentialModal(credentialId,userId, url, username, password, key) {
                 $('#credential-id').val(credentialId ? credentialId : '');
                 $('#credential-url').val(url ? url : '');
                 $('#credential-username').val(username ? username : '');
                 $('#credential-password').val(password ? password : '');
                 $('#credential-userId').val(userId ? userId : '');
+                $('#credential-key').val(key ? key: '');
                 $('#credentialModal').modal('show');
             }
 
             function activeTab(tabId){
+                
                 if(!tabId){
                     tabId = 'nav-files'
                 }
@@ -239,10 +245,11 @@
             function setActiveTab(tabId){
                 localStorage.setItem('activeTab', tabId);
             }
-            
-            activeTab(localStorage.getItem("activeTab"))
-            
+
+             activeTab(localStorage.getItem("activeTab"));
+             
 
         </script>
+       
     </body>
 </html>

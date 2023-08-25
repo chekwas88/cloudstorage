@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.udacity.jwdnd.course1.cloudstorage.exception.EntityNotFoundException;
 import com.udacity.jwdnd.course1.cloudstorage.exception.ErrorException;
+import com.udacity.jwdnd.course1.cloudstorage.exception.FileNotFoundException;
 
 @ControllerAdvice
 public class ApplicationExceptionHandler {
@@ -15,7 +16,7 @@ public class ApplicationExceptionHandler {
         return "error";
     }
 
-    @ExceptionHandler(ErrorException.class)
+    @ExceptionHandler({ ErrorException.class, FileNotFoundException.class })
     public String HandleOperationError(ErrorException ex, Model model) {
         model.addAttribute("error", ex.getMessage());
         return "error";

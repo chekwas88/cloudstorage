@@ -7,6 +7,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,12 +25,12 @@ class CloudStorageApplicationTests {
 
 	@BeforeAll
 	static void beforeAll() {
-		WebDriverManager.chromedriver().setup();
+		WebDriverManager.firefoxdriver().setup();
 	}
 
 	@BeforeEach
 	public void beforeEach() {
-		this.driver = new ChromeDriver();
+		this.driver = new FirefoxDriver();
 	}
 
 	@AfterEach
@@ -199,6 +200,282 @@ class CloudStorageApplicationTests {
 			System.out.println("Large File upload failed");
 		}
 		Assertions.assertFalse(driver.getPageSource().contains("HTTP Status 403 – Forbidden"));
+
+	}
+
+	@Test
+	public void testNoteCreation() {
+		String noteTitle = "title";
+		String noteDescription = "description";
+		// Create a test account
+		doMockSignUp("noteCreation", "Test", "noteCreation", "123");
+		doLogIn("noteCreation", "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-notes-tab")));
+		WebElement noteNavBar = driver.findElement(By.id("nav-notes-tab"));
+		noteNavBar.click();
+		createNote(noteTitle, noteDescription);
+
+	}
+
+	@Test
+	public void testNoteUpdate() {
+		String noteNewTitle = "noteNewTitle";
+		String noteNewDescription = "noteNewDescription";
+		// Create a test account
+		doMockSignUp("noteUpdate", "Test", "noteUpdate", "123");
+		doLogIn("noteUpdate", "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-notes-tab")));
+		WebElement noteNavBar = driver.findElement(By.id("nav-notes-tab"));
+		noteNavBar.click();
+		updateNote(noteNewTitle, noteNewDescription);
+
+	}
+
+	@Test
+	public void testNoteDeletion() {
+		String noteNewTitle = "title";
+		String noteNewDescription = "description";
+		// Create a test account
+		doMockSignUp("noteDelete", "Test", "noteDelete", "123");
+		doLogIn("noteDelete", "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-notes-tab")));
+		WebElement noteNavBar = driver.findElement(By.id("nav-notes-tab"));
+		noteNavBar.click();
+		deleteNote(noteNewTitle, noteNewDescription);
+
+	}
+
+	@Test
+	public void testCredentialCreation() {
+		String url = "some/url";
+		String username = "credentialCreation";
+		String password = "789";
+		// Create a test account
+		doMockSignUp(username, "Test", username, "123");
+		doLogIn(username, "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-credentials-tab")));
+		driver.findElement(By.id("nav-credentials-tab")).click();
+		createCredential(url, username, password);
+
+	}
+
+	@Test
+	public void testCredentialUpdate() {
+		String url = "some/url";
+		String username = "credentialCreation";
+		String password = "789";
+		// Create a test account
+		doMockSignUp("editCred", "Test", "editCred", "123");
+		doLogIn("editCred", "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-credentials-tab")));
+		driver.findElement(By.id("nav-credentials-tab")).click();
+		updateCredential(url, username, password);
+
+	}
+
+	@Test
+	public void testCredentialDeletion() {
+		String url = "some/url";
+		String username = "credentialCreation";
+		String password = "789";
+		// Create a test account
+		doMockSignUp("credDelete", "Test", "credDelete", "123");
+		doLogIn("credDelete", "123");
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-credentials-tab")));
+		driver.findElement(By.id("nav-credentials-tab")).click();
+		deleteCredential(url, username, password);
+
+	}
+
+	private void createNote(String title, String description) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-creation-button")));
+		WebElement createNoteButton = driver.findElement(By.id("note-creation-button"));
+		createNoteButton.click();
+
+		typeInNoteDetails(title, description);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("userTable")));
+		WebElement userTable = driver.findElement(By.id("userTable"));
+
+		Assertions.assertTrue(userTable.getText().contains(title));
+		Assertions.assertTrue(userTable.getText().contains(description));
+	}
+
+	private void updateNote(String title, String description) {
+		String oldTitle = "oldTitle";
+		String oldDescription = "oldDescription";
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-creation-button")));
+		WebElement createNoteButton = driver.findElement(By.id("note-creation-button"));
+		createNoteButton.click();
+		// create note
+		typeInNoteDetails(oldTitle, oldDescription);
+		checkSuccessfulOperation(webDriverWait);
+		// update note
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-edit-button")));
+		WebElement editNoteButton = driver.findElement(By.id("note-edit-button"));
+		editNoteButton.click();
+		typeInNoteDetails(title, description);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("userTable")));
+		WebElement userTable = driver.findElement(By.id("userTable"));
+
+		Assertions.assertTrue(userTable.getText().contains(title));
+		Assertions.assertTrue(userTable.getText().contains(description));
+
+	}
+
+	private void deleteNote(String title, String description) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-creation-button")));
+		WebElement createNoteButton = driver.findElement(By.id("note-creation-button"));
+		createNoteButton.click();
+
+		typeInNoteDetails(title, description);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("userTable")));
+		WebElement userTable = driver.findElement(By.id("userTable"));
+
+		Assertions.assertTrue(userTable.getText().contains(title));
+		Assertions.assertTrue(userTable.getText().contains(description));
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("delete-note")));
+		driver.findElement(By.id("delete-note")).click();
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("userTable")));
+		WebElement userTableElement = driver.findElement(By.id("userTable"));
+		Assertions.assertFalse(userTableElement.getText().contains(title));
+		Assertions.assertFalse(userTableElement.getText().contains(description));
+
+	}
+
+	private void typeInNoteDetails(String title, String description) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-title")));
+		WebElement noteTitle = driver.findElement(By.id("note-title"));
+		WebElement noteDescription = driver.findElement(By.id("note-description"));
+
+		noteTitle.click();
+		noteTitle.sendKeys(title);
+
+		noteDescription.click();
+		noteDescription.sendKeys(description);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-submit")));
+		WebElement createNote = driver.findElement(By.id("note-submit"));
+		createNote.click();
+	}
+
+	private void createCredential(String url, String username, String password) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-creation-button")));
+		driver.findElement(By.id("credential-creation-button")).click();
+
+		typeInCredentialDetails(url, username, password, false);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credentialTable")));
+		WebElement credentialTable = driver.findElement(By.id("credentialTable"));
+
+		Assertions.assertTrue(credentialTable.getText().contains(url));
+		Assertions.assertTrue(credentialTable.getText().contains(username));
+	}
+
+	private void updateCredential(String url, String username, String password) {
+		String oldUrl = "some/old/url";
+		String oldUsername = "oldUsername";
+		String oldPassword = "oldPassword";
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-creation-button")));
+		driver.findElement(By.id("credential-creation-button")).click();
+		// create credential
+		typeInCredentialDetails(oldUrl, oldUsername, oldPassword, false);
+		checkSuccessfulOperation(webDriverWait);
+		// update credential
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-edit-button")));
+		driver.findElement(By.id("credential-edit-button")).click();
+		typeInCredentialDetails(url, username, password, true);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credentialTable")));
+		WebElement credentialTable = driver.findElement(By.id("credentialTable"));
+
+		Assertions.assertTrue(credentialTable.getText().contains(url));
+		Assertions.assertTrue(credentialTable.getText().contains(username));
+
+	}
+
+	private void deleteCredential(String url, String username, String password) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-creation-button")));
+		driver.findElement(By.id("credential-creation-button")).click();
+
+		typeInCredentialDetails(url, username, password, false);
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credentialTable")));
+		WebElement credentialTable = driver.findElement(By.id("credentialTable"));
+
+		Assertions.assertTrue(credentialTable.getText().contains(url));
+		Assertions.assertTrue(credentialTable.getText().contains(username));
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("delete-credential")));
+		driver.findElement(By.id("delete-credential")).click();
+		checkSuccessfulOperation(webDriverWait);
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credentialTable")));
+		WebElement credentialTableElement = driver.findElement(By.id("credentialTable"));
+		Assertions.assertFalse(credentialTableElement.getText().contains(url));
+		Assertions.assertFalse(credentialTableElement.getText().contains(username));
+
+	}
+
+	private void typeInCredentialDetails(String url, String username, String password, boolean isEdit) {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-url")));
+		WebElement urlInput = driver.findElement(By.id("credential-url"));
+		urlInput.click();
+		if (isEdit) {
+			urlInput.clear();
+		}
+		urlInput.sendKeys(url);
+
+		WebElement usernameInput = driver.findElement(By.id("credential-username"));
+		usernameInput.click();
+		if (isEdit) {
+			usernameInput.clear();
+
+		}
+		usernameInput.sendKeys(username);
+
+		WebElement passwordInput = driver.findElement(By.id("credential-password"));
+		passwordInput.click();
+		if (isEdit) {
+			passwordInput.clear();
+		}
+		passwordInput.sendKeys(password);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-submit")));
+		driver.findElement(By.id("credential-submit")).click();
+	}
+
+	private void checkSuccessfulOperation(WebDriverWait webDriverWait) {
+		// Assert that the operation was successfully
+		webDriverWait.until(ExpectedConditions.presenceOfElementLocated(By.id("success")));
+		Assertions.assertEquals("http://localhost:" + this.port + "/result", driver.getCurrentUrl());
+		driver.findElement(By.id("result-to-home")).click();
+		Assertions.assertEquals("http://localhost:" + this.port + "/home", driver.getCurrentUrl());
 
 	}
 

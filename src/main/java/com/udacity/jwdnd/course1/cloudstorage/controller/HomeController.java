@@ -20,6 +20,7 @@ import com.udacity.jwdnd.course1.cloudstorage.model.Credential;
 import com.udacity.jwdnd.course1.cloudstorage.model.File;
 import com.udacity.jwdnd.course1.cloudstorage.model.Note;
 import com.udacity.jwdnd.course1.cloudstorage.services.CredentialService;
+import com.udacity.jwdnd.course1.cloudstorage.services.EncryptionService;
 import com.udacity.jwdnd.course1.cloudstorage.services.FileService;
 import com.udacity.jwdnd.course1.cloudstorage.services.NoteService;
 import com.udacity.jwdnd.course1.cloudstorage.services.UserService;
@@ -33,6 +34,7 @@ public class HomeController {
     private FileService fileService;
     private NoteService noteService;
     private CredentialService credentialService;
+    // private EncryptionService encryptionService;
 
     @GetMapping(value = "/result")
     public String displayResult(Model model) {
@@ -42,7 +44,8 @@ public class HomeController {
 
     @GetMapping(value = "/home")
     public String showNotes(Model model, @ModelAttribute("note") Note note,
-            @ModelAttribute("credential") Credential credential, Principal principal) {
+            @ModelAttribute("credential") Credential credential,
+            @ModelAttribute("encryptionService") EncryptionService encryptionService, Principal principal) {
         Integer userId = userService.findUserByUsername(principal.getName()).getUserId();
         model.addAttribute("files", fileService.getUserFiles(userId));
         model.addAttribute("notes", noteService.getUserNotes(userId));
@@ -81,7 +84,7 @@ public class HomeController {
     @PostMapping(value = "/saveCredential")
 
     public String saveCredential(@ModelAttribute("credential") Credential credential,
-            Principal principal, RedirectAttributes attributes) {
+            Principal principal, RedirectAttributes attributes, Model model) {
         if (credential.getCredentialId() != null) {
             credentialService.update(credential);
         } else {
