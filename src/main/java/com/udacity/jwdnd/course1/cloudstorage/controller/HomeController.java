@@ -1,7 +1,11 @@
 package com.udacity.jwdnd.course1.cloudstorage.controller;
 
 import java.io.IOException;
+import java.net.URLConnection;
 import java.security.Principal;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.udacity.jwdnd.course1.cloudstorage.exception.ErrorException;
 import com.udacity.jwdnd.course1.cloudstorage.model.Credential;
 import com.udacity.jwdnd.course1.cloudstorage.model.File;
 import com.udacity.jwdnd.course1.cloudstorage.model.Note;
@@ -112,6 +117,8 @@ public class HomeController {
     public String uploadFile(@RequestParam("fileUpload") MultipartFile file, Principal principal,
             RedirectAttributes attributes) {
         Integer userId = userService.findUserByUsername(principal.getName()).getUserId();
+        if (file.isEmpty())
+            throw new ErrorException("File is empty");
         try {
             File dfile = new File(null, file.getOriginalFilename(), file.getContentType(),
                     String.valueOf(file.getSize()), userId, file.getBytes());
@@ -137,18 +144,28 @@ public class HomeController {
     }
 
     @GetMapping(value = "/download")
-    public ResponseEntity<byte[]> viewFile(@RequestParam("fileName") String fileName, Principal principal) {
-        HttpHeaders headers = new HttpHeaders();
+    public void downloadFile(@RequestParam("fileName") String fileName, Principal principal,
+            HttpServletResponse response) {
         Integer userId = userService.findUserByUsername(principal.getName()).getUserId();
         File file = fileService.getUserFile(fileName, userId);
 
-        headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+        String mimeType = URLConnection.guessContentTypeFromName(file.getFileName());
+        if (mimeType == null) {
+            // unknown mimetype so set the mimetype to application/octet-stream
+            mimeType = "application/octet-stream";
+        }
+        response.setContentType(mimeType);
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename = " + file.getFileName();
+        response.setHeader(headerKey, headerValue);
+        try {
+            ServletOutputStream outputStream = response.getOutputStream();
+            outputStream.write(file.getFileData());
+            outputStream.close();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
 
-        headers.add("content-disposition", "inline;filename=" + file.getFileName());
-
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        ResponseEntity<byte[]> response = new ResponseEntity<byte[]>(file.getFileData(), headers, HttpStatus.OK);
-        return response;
     }
 
 }
